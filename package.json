@@ -1,0 +1,33 @@
+{
+  "name": "mansourycli",
+  "version": "1.0.0",
+  "description": "A CLI tool to interact with HackerNews and more",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "bin": {
+    "mansourycli": "./dist/index.js"
+  },
+  "author": "raya",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "commander": "^12.1.0",
+    "dotenv": "^10.0.0",
+    "moment": "^2.30.1",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/commander": "^2.12.2",
+    "@types/dotenv": "^8.2.0",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^20.14.9",
+    "@types/open": "^6.2.1",
+    "typescript": "^5.5.2"
+  }
+}
