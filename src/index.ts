@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import axios from 'axios';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import open from 'open';
 import moment from 'moment';
 import * as dotenv from 'dotenv';
@@ -20,12 +21,22 @@ program
   .option('-f, --format <format>', 'Output format (text or json)', 'text')
   .action(async (options: { number: number; format: string }) => {
     const { number, format } = options;
+
+    // Create a SOCKS proxy agent
+    const proxyAgent = new SocksProxyAgent('socks5://localhost:1080');
+
+    // Create an axios instance configured to use the proxy agent
+    const client = axios.create({
+        baseURL: 'https://hacker-news.firebaseio.com/v0',
+        httpsAgent: proxyAgent,
+    });
+
     try {
-      const response = await axios.get('https://hacker-news.firebaseio.com/v0/topstories.json');
+      const response = await client.get('/topstories.json');
       const topPostIds = response.data.slice(0, number);
 
       const postPromises = topPostIds.map((id: number) =>
-        axios.get(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+        client.get(`/item/${id}.json`)
       );
       const posts = await Promise.all(postPromises);
 
@@ -82,9 +93,12 @@ program
         console.error('WEATHER_API_KEY is not defined');
         return;
       }
-      const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=auto:ip`);
+      const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=qom`);
       const weather = response.data;
       console.log(`Current temperature in ${weather.location.name}: ${weather.current.temp_c}°C`);
+      console.log(`Condition: ${weather.current.condition.text}`);
+      console.log(`Humidity: ${weather.current.humidity}%`);
+      console.log(`Wind: ${weather.current.wind_kph} kph`);
     } catch (error) {
       console.error('Error fetching weather:', error);
     }

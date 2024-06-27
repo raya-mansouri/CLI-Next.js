@@ -1,5 +1,7 @@
+#!/usr/bin/env node
 import { Command } from 'commander';
 import axios from 'axios';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import open from 'open';
 import moment from 'moment';
 import * as dotenv from 'dotenv';
@@ -16,10 +18,17 @@ program
     .option('-f, --format <format>', 'Output format (text or json)', 'text')
     .action(async (options) => {
     const { number, format } = options;
+    // Create a SOCKS proxy agent
+    const proxyAgent = new SocksProxyAgent('socks5://localhost:1080');
+    // Create an axios instance configured to use the proxy agent
+    const client = axios.create({
+        baseURL: 'https://hacker-news.firebaseio.com/v0',
+        httpsAgent: proxyAgent,
+    });
     try {
-        const response = await axios.get('https://hacker-news.firebaseio.com/v0/topstories.json');
+        const response = await client.get('/topstories.json');
         const topPostIds = response.data.slice(0, number);
-        const postPromises = topPostIds.map((id) => axios.get(`https://hacker-news.firebaseio.com/v0/item/${id}.json`));
+        const postPromises = topPostIds.map((id) => client.get(`/item/${id}.json`));
         const posts = await Promise.all(postPromises);
         if (format === 'json') {
             console.log(JSON.stringify(posts.map(post => post.data), null, 2));
@@ -76,7 +85,7 @@ program
             console.error('WEATHER_API_KEY is not defined');
             return;
         }
-        const response = await axios.get(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=qom`);
+        const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=qom`);
         const weather = response.data;
         console.log(`Current temperature in ${weather.location.name}: ${weather.current.temp_c}°C`);
         console.log(`Condition: ${weather.current.condition.text}`);
@@ -84,16 +93,7 @@ program
         console.log(`Wind: ${weather.current.wind_kph} kph`);
     }
     catch (error) {
-        if (error.response) {
-            // The request was made, but the server responded with a status code that falls out of the range of 2xx
-            console.error('Error fetching weather:', error.response.data);
-        } else if (error.request) {
-            // The request was made, but no response was received
-            console.error('No response received:', error.request);
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error('Error:', error.message);
-        }
+        console.error('Error fetching weather:', error);
     }
 });
 program.parse(process.argv);
