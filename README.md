@@ -1,4 +1,5 @@
 npm install -g mansourycli
+
 mansourycli --help
 
 mansourycli top -n 10 # HackerNews recent top 10. Entering the post number will open up the browser and show that post.
